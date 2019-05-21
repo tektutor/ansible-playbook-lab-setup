@@ -22,6 +22,12 @@
 
     - name: Extract Maven
       shell: tar xvfz apache-maven-3.6.1-bin.tar.gz
+
+    - name: Copy Maven Local Repo folder plugins and dependencies tar file 
+      copy: src=mvn-local-repo-folder.tar.gz dest=/home/train/mvn-local-repo-folder.tar.gz
+
+    - name: Extract and populate .m2 folder
+      shell: tar xvfz /home/train/mvn-local-repo-folder.tar.gz -C /
     
     - name: Copy bashrc file to add JDK and Maven in Path
       copy: src=bashrc dest=/home/train/.bashrc backup=yes
