@@ -1,0 +1,82 @@
+- name: Install all necessary tools for the training
+  hosts: all
+  become: yes
+
+  vars: 
+    - software_tools:
+         - yum-utils
+         - device-mapper-persistent-data
+         - lvm2
+         - tree
+         - git
+
+  tasks:
+    - name: Install Extra Packages for Enterprise Linux
+      yum: name=epel-release state=latest
+
+    - name: Install JDK
+      yum: name=java-1.8.0-openjdk-devel state=latest
+
+    - name: Download Maven
+      shell: wget http://mirrors.estointernet.in/apache/maven/maven-3/3.6.1/binaries/apache-maven-3.6.1-bin.tar.gz
+
+    - name: Extract Maven
+      shell: tar xvfz apache-maven-3.6.1-bin.tar.gz
+    
+    - name: Copy bashrc file to add JDK and Maven in Path
+      copy: src=bashrc dest=/home/train/.bashrc backup=yes
+
+    - name: Copy jenkins war file
+      copy: src=jenkins.war dest=/home/train/jenkins.war 
+
+    - name: Copy jenkins war file
+      copy: src=jenkins-folder.tar.gz dest=/home/train/jenkins-folder.tar.gz 
+
+    - name: Extract jenkins folder
+      shell: tar xvfz /home/train/jenkins-folder.tar.gz -C /
+
+    - name: Copy Tomcat tar gunzip file
+      copy: src=apache-tomcat-8.5.41.tar.gz dest=/home/train/apache-tomcat-8.5.41.tar.gz
+
+    - name: Extract Tomcat tar gunzip file
+      shell: tar xvfz /home/train/apache-tomcat-8.5.41.tar.gz -C /home/train
+
+    - name: Copy Eclipse IDE tar file
+      copy: src=eclipse-jee-photon-R-linux-gtk-x86_64.tar.gz dest=/home/train/eclipse-jee-photon-R-linux-gtk-x86_64.tar.gz
+
+    - name: Extract Eclipse IDE tar file
+      shell: tar xvfz /home/train/eclipse-jee-photon-R-linux-gtk-x86_64.tar.gz -C /home/train
+
+    - name : Install docker dependencies
+      yum: name="{{item}}" state=latest
+      with_items: "{{software_tools}}"
+
+    - name: Add the docker repository
+      shell: yum-config-manager -q --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+    - name: Install docker comunity edition
+      yum: name=docker-ce state=latest
+    
+    - name: Start docker service
+      service: name=docker state=started enabled=yes
+    
+    - name: Add train user to docker group
+      shell: usermod -aG docker train
+
+    - name: Copy MySQL Server rpm file
+      copy: src=mysql-community-release-el7-5.noarch.rpm dest=/home/train/mysql-community-release-el7-5.noarch.rpm
+
+    - name: Extract MySQL Server from rpm
+      shell: rpm -ivhF --quiet mysql-community-release-el7-5.noarch.rpm
+
+    - name: Update
+      shell: yum update -y
+
+    - name: Install MySQL Server
+      yum: name=mysql-server state=latest
+
+    - name: Start the mysql server
+      service: name=mysqld state=started enabled=yes
+
+    - name: Copy K8 cluster setup script
+      copy: src=dind-cluster-v1.12.sh dest=/home/train/dind-cluster-v1.12.sh

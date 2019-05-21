@@ -1,0 +1,2 @@
+[all]
+192.168.100.134 ansible_user=train ansible_host=192.168.100.134 ansible_private_key_file=/root/.ssh/id_rsa ansible_become_user=root ansible_become_password=amdocs
